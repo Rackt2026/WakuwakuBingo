@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#34246b">
+<meta name="description" content="数字を引いてみんなで遊べる、わくわくビンゴ抽選機。">
+<title>わくわくビンゴ！</title>
+<style>
+*{box-sizing:border-box}body{margin:0;color:#302354;background:#f7f3ff;font-family:system-ui,sans-serif;font-weight:650}button,select{font:inherit}button,select{cursor:pointer}button:focus-visible,select:focus-visible{outline:3px solid #087a82;outline-offset:4px}
+header{padding:28px 16px 74px;text-align:center;color:white;background:radial-gradient(circle at 10% 30%,#ffc866 0 5px,transparent 6px),radial-gradient(circle at 87% 52%,#70e5c5 0 7px,transparent 8px),radial-gradient(circle at 78% 20%,#ff96ca 0 4px,transparent 5px),linear-gradient(115deg,#322361,#6042a4);border-radius:0 0 36px 36px}header small{display:inline-block;background:#ffffff26;border-radius:30px;padding:6px 16px;letter-spacing:.15em}h1{margin:8px 0 3px;font-size:clamp(2rem,7vw,4rem);line-height:1.2;letter-spacing:.04em}header p{margin:8px 0 0;color:#f2e9ff}header b{color:#ffda75}
+main{width:min(960px,calc(100% - 32px));margin:-45px auto 36px}.settings,.card{background:white;border:1px solid #e9e1f7;border-radius:24px;box-shadow:0 6px 20px #3923660c}.settings{display:flex;gap:12px 18px;align-items:center;flex-wrap:wrap;padding:15px 20px;margin-bottom:16px}.settings label{display:flex;align-items:center;gap:10px;flex-wrap:wrap}select,.reset{border:1px solid #dcd0f0;border-radius:12px;background:#f7f2ff;color:#433168;padding:10px 13px}.reset{margin-left:auto}.reset:disabled{opacity:.5;cursor:default}.board{display:grid;grid-template-columns:1fr 1fr;gap:16px}.card{padding:22px}.stage{text-align:center;background:radial-gradient(circle at 50% 45%,#eee4ff,white 68%)}h2{font-size:1.14rem;margin:0}.ball{position:relative;display:grid;place-items:center;width:156px;aspect-ratio:1;margin:16px auto 13px;border-radius:50%;background:radial-gradient(circle at 33% 23%,#fff2aa,#ffd66c 55%,#f2a845);border:5px solid #fff6d3;box-shadow:0 8px 0 #e9b55755,0 11px 24px #9960b02b;color:#4a295e;font-size:4.4rem;font-weight:900;font-variant-numeric:tabular-nums}.ball::before,.ball::after{position:absolute;color:#aa6be9;font-size:25px;content:"✦";left:-36px;top:35%}.ball::after{left:auto;right:-35px;top:64%;color:#cf5b8e}
+#status{min-height:1.5em;margin:14px 0;color:#5e4979}.draw{width:min(100%,320px);min-height:58px;background:#6138b8;color:white;border:0;border-radius:16px;box-shadow:0 5px #42237f;font-size:1.25rem;font-weight:850}.draw:hover:enabled{background:#522caa}.draw:active:enabled{transform:translateY(3px);box-shadow:0 2px #42237f}.draw:disabled{background:#e6def1;color:#615172;box-shadow:none;cursor:default}.history-head{display:flex;justify-content:space-between;align-items:center;gap:8px}.count{background:#dff6ec;color:#235b48;padding:6px 10px;border-radius:30px;font-size:.84rem;white-space:nowrap}.empty{text-align:center;color:#66547b;background:#faf7ff;border:2px dashed #e9def6;border-radius:16px;padding:24px 12px;margin:20px 0 0}ol{list-style:none;margin:16px 0 0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:8px}li{display:grid;justify-items:center;gap:2px;padding:6px;border-radius:12px;background:#f3edff;color:#4d3577}li:nth-child(3n+2){background:#e1f8ee;color:#255d4b}li:nth-child(3n){background:#fff1d0;color:#664825}li strong{font-size:1.45rem}li span{font-size:.77rem}li:last-child{outline:2px solid currentColor;outline-offset:-2px}
+@media(max-width:630px){.board{grid-template-columns:1fr}.card{padding:17px}.settings{padding:12px}.ball{width:132px;font-size:3.8rem}}
+.show{position:relative;display:grid;place-items:center;height:228px;isolation:isolate}
+.machine{position:absolute;top:6px;width:168px;height:126px;transition:opacity .2s}
+.machine[hidden]{display:none}.wheel{transform-origin:74px 56px}.rolling .wheel{animation:spin .52s linear infinite}.rolling .drum-ball{animation:jiggle .18s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:center}.rolling .drum-ball:nth-of-type(even){animation-delay:-.09s}
+@keyframes spin{to{transform:rotate(360deg)}}@keyframes jiggle{to{transform:translate(4px,-6px)}}
+.chest{position:absolute;bottom:8px;width:118px;height:63px;perspective:320px}
+.chest-top{position:absolute;inset:0 0 auto;height:28px;border-radius:16px 16px 4px 4px;border:3px solid #9c531d;background:linear-gradient(#ffdf78,#f9a543);transform-origin:center bottom;transition:transform .23s ease-out}
+.chest-front{position:absolute;inset:26px 0 0;border:3px solid #9c531d;border-radius:4px 4px 11px 11px;background:repeating-linear-gradient(90deg,#f6ac47 0 18px,#ffd77a 18px 28px,#f6ac47 28px 60px)}
+.chest-front::after{content:"";position:absolute;left:50%;top:-9px;translate:-50%;width:18px;height:18px;border:2px solid #965218;border-radius:5px;background:#ffe086}
+.revealed .chest-top{transform:rotateX(-112deg)}
+.show .ball{position:absolute;z-index:1;top:9px;margin:0;width:138px;font-size:3.85rem;visibility:hidden}
+.revealed .ball{visibility:visible;animation:treasure-pop .5s cubic-bezier(.19,.86,.35,1.22) both}
+@keyframes treasure-pop{from{transform:translateY(135px) scale(.12);opacity:0}to{transform:translateY(0) scale(1);opacity:1}}
+.sound{border:1px solid #dcd0f0;border-radius:12px;background:#f7f2ff;color:#433168;padding:10px 13px}
+@media(prefers-reduced-motion:reduce){.rolling .wheel,.rolling .drum-ball,.revealed .ball{animation:none}.machine,.chest-top{transition:none}}
+</style>
+</head>
+<body>
+<header><small>みんなで あそぼう</small><h1><b aria-hidden="true">✦</b> わくわくビンゴ！ <b aria-hidden="true">✦</b></h1><p>つぎは どの数字が出るかな？</p></header>
+<main>
+<section class="settings" aria-label="ゲームの設定">
+<label for="limit">数字のはんい <select id="limit"></select></label>
+<button type="button" class="sound" id="sound" aria-pressed="true">効果音 オン</button>
+<button type="button" class="reset" id="reset" disabled>はじめから</button>
+</section>
+<div class="board">
+<section class="card stage">
+<h2>今出た数字</h2>
+<div class="show" id="show" aria-hidden="true">
+<svg class="machine" id="machine" viewBox="0 0 168 126">
+  <path d="M45 87 27 113h94l-18-26" fill="#62419c" stroke="#42286e" stroke-width="5" stroke-linejoin="round"/>
+  <circle cx="74" cy="56" r="48" fill="#ede1ff" stroke="#6845a9" stroke-width="6"/>
+  <g class="wheel" stroke="#ad90de" stroke-width="3">
+    <path d="M74 10v92M28 56h92M42 24l64 64m0-64L42 88"/>
+    <circle class="drum-ball" cx="52" cy="39" r="10" fill="#ff96bf" stroke="#bc547f"/>
+    <circle class="drum-ball" cx="82" cy="31" r="9" fill="#ffda74" stroke="#b5742a"/>
+    <circle class="drum-ball" cx="93" cy="65" r="11" fill="#76e3bd" stroke="#3a9075"/>
+    <circle class="drum-ball" cx="59" cy="78" r="9" fill="#9fc9ff" stroke="#587db7"/>
+  </g>
+  <circle cx="74" cy="56" r="8" fill="#6742a4"/>
+  <path d="M124 56h20v18" fill="none" stroke="#62419c" stroke-width="7" stroke-linecap="round"/>
+  <circle cx="144" cy="75" r="7" fill="#ffac65"/>
+</svg>
+<div class="ball" id="ball"></div>
+<div class="chest"><div class="chest-top"></div><div class="chest-front"></div></div>
+</div>
+<p id="status" role="status">ボタンをおして スタート！</p>
+<button type="button" class="draw" id="draw"><span aria-hidden="true">✦</span> 数字をひく！</button>
+</section>
+<section class="card">
+<div class="history-head"><h2>出た数字のじゅんばん</h2><span class="count" id="count"></span></div>
+<p class="empty" id="empty">ひいた数字が ここにならぶよ！</p>
+<ol id="history" aria-label="引いた順の数字"></ol>
+</section>
+</div>
+</main>
+<script>
+const limit = document.querySelector('#limit');
+const reset = document.querySelector('#reset');
+const draw = document.querySelector('#draw');
+const ball = document.querySelector('#ball');
+const status = document.querySelector('#status');
+const count = document.querySelector('#count');
+const historyList = document.querySelector('#history');
+const empty = document.querySelector('#empty');
+const show = document.querySelector('#show');
+const machine = document.querySelector('#machine');
+const sound = document.querySelector('#sound');
+const rollDuration = 1400;
+let audio;
+let playing = false;
+
+function prepareAudio() {
+  if (sound.getAttribute('aria-pressed') !== 'true') return;
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    audio ??= new AudioContext();
+    if (audio.state === 'suspended') audio.resume().catch(() => {});
+  } catch {
+    audio = undefined;
+  }
+}
+
+function tone(time, frequency, endFrequency, duration, volume, type) {
+  const oscillator = audio.createOscillator();
+  const envelope = audio.createGain();
+  oscillator.type = type;
+  oscillator.frequency.setValueAtTime(frequency, time);
+  oscillator.frequency.exponentialRampToValueAtTime(endFrequency, time + duration);
+  envelope.gain.setValueAtTime(0.001, time);
+  envelope.gain.linearRampToValueAtTime(volume, time + 0.005);
+  envelope.gain.exponentialRampToValueAtTime(0.001, time + duration);
+  oscillator.connect(envelope).connect(audio.destination);
+  oscillator.start(time);
+  oscillator.stop(time + duration);
+}
+
+function playRoll() {
+  if (!audio || audio.state !== 'running') return;
+  const now = audio.currentTime;
+  for (let beat = 0; beat < 12; beat++) {
+    tone(now + beat * 0.112, 235 + Math.random() * 235, 110, 0.065, 0.045, 'triangle');
+  }
+}
+
+function playReveal() {
+  if (sound.getAttribute('aria-pressed') !== 'true' || audio?.state !== 'running') return;
+  const now = audio.currentTime;
+  tone(now, 240, 88, 0.17, 0.22, 'sine');
+  [523.25, 659.25, 783.99].forEach((note, i) => {
+    tone(now + 0.07 + i * 0.075, note, note, 0.28, 0.065, 'sine');
+  });
+}
+
+sound.addEventListener('click', () => {
+  const enabled = sound.getAttribute('aria-pressed') !== 'true';
+  sound.setAttribute('aria-pressed', enabled);
+  sound.textContent = enabled ? '効果音 オン' : '効果音 オフ';
+});
+
+for (let n = 5; n <= 50; n += 5) {
+  limit.add(new Option('1〜' + n, n));
+}
+let maximum = 50;
+let remaining;
+let draws;
+
+function updateCount() {
+  count.textContent = 'のこり ' + remaining.length + ' / ' + maximum;
+}
+
+function start() {
+  limit.value = maximum;
+  remaining = Array.from({length: maximum}, (_, index) => index + 1);
+  draws = 0;
+  show.classList.remove('revealed');
+  machine.hidden = false;
+  ball.textContent = '';
+  status.textContent = 'ボタンをおして スタート！';
+  historyList.replaceChildren();
+  empty.hidden = false;
+  draw.disabled = false;
+  reset.disabled = true;
+  updateCount();
+}
+
+limit.addEventListener('change', () => {
+  if (draws && !confirm('数字のはんいをかえると、はじめからになるよ。かえる？')) {
+    limit.value = maximum;
+    return;
+  }
+  maximum = Number(limit.value);
+  start();
+});
+
+reset.addEventListener('click', () => {
+  if (confirm('出た数字をけして、はじめからあそぶ？')) {
+    start();
+    draw.focus();
+  }
+});
+
+draw.addEventListener('click', () => {
+  if (playing || !remaining.length) return;
+  playing = true;
+  draw.disabled = limit.disabled = reset.disabled = sound.disabled = true;
+  show.classList.remove('revealed');
+  machine.hidden = false;
+  show.classList.add('rolling');
+  status.textContent = 'ガラガラ… なにが出るかな？';
+  prepareAudio();
+  if (sound.getAttribute('aria-pressed') === 'true') setTimeout(playRoll, 55);
+  setTimeout(revealNumber, rollDuration);
+});
+
+function revealNumber() {
+  show.classList.remove('rolling');
+  machine.hidden = true;
+  const index = Math.floor(Math.random() * remaining.length);
+  const [number] = remaining.splice(index, 1);
+  draws += 1;
+  ball.textContent = number;
+  show.classList.add('revealed');
+  playReveal();
+  const round = draws + '回目';
+  const item = document.createElement('li');
+  const label = document.createElement('span');
+  const value = document.createElement('strong');
+  label.textContent = round;
+  value.textContent = number;
+  item.append(label, value);
+  historyList.append(item);
+  empty.hidden = true;
+  playing = false;
+  limit.disabled = reset.disabled = sound.disabled = false;
+  draw.disabled = remaining.length === 0;
+  status.textContent = round + 'は ' + number + '！' + (draw.disabled ? ' ぜんぶ出たよ！' : '');
+  updateCount();
+}
+
+start();
+</script>
+</body>
+</html>
